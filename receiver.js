@@ -339,6 +339,16 @@
   // Test hook for feeding messages from the browser console (never active on a TV).
   if (params.has('test') || params.has('demo')) window.ldReceiver = { handle: handle, state: S, onSend: function (fn) { send = fn; } };
 
+  // ---------------------------------------------------------------- AirPlay (iPhone second screen)
+  // The app shows this page full-screen on the AirPlay TV and calls window.ldReceiver.handle(msg);
+  // replies go back through the "ld" WebKit message handler. Same protocol as Chromecast.
+  var airplay = params.has('airplay') && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ld;
+  if (airplay) {
+    send = function (obj) { try { window.webkit.messageHandlers.ld.postMessage(obj); } catch (e) {} };
+    window.ldReceiver = { handle: handle, state: S };
+    send({ type: 'loaded', protocol: PROTOCOL });
+  }
+
   function startDemo(p) {
     var lang = p.get('lang') === 'en' ? 'en' : 'es';
     fetch('demo-classic.json').then(function (r) { return r.json(); }).then(function (cards) {
