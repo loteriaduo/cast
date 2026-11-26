@@ -27,6 +27,7 @@
       endedText: function (n) { return n === 1 ? 'Salió 1 carta.' : 'Salieron ' + n + ' cartas.'; },
       auto: function (s) { return 'Automático · ' + s + ' s'; },
       caller: function (n) { return 'Canta: ' + n; },
+      noName: '¡Tenemos ganador!',
     },
     en: {
       idleHint: 'Open Lotería Duo on your phone and tap the Cast icon.',
@@ -38,6 +39,7 @@
       endedText: function (n) { return n === 1 ? '1 card was called.' : n + ' cards were called.'; },
       auto: function (s) { return 'Auto · ' + s + 's'; },
       caller: function (n) { return 'Caller: ' + n; },
+      noName: 'We have a winner!',
     },
   };
 
@@ -129,7 +131,9 @@
       $('endedText').textContent = t().endedText(S.called.length);
     }
     if (screen === 'winner') {
-      $('winnerNames').textContent = (S.winners || []).join(' · ');
+      // "Winner"/"Ganador" means nobody was named: celebrate without a name.
+      var named = (S.winners || []).filter(function (n) { return n && !/^(winner|ganador|manual winner)$/i.test(String(n).trim()); });
+      $('winnerNames').textContent = named.length ? named.join(' · ') : t().noName;
       startConfetti();
     } else {
       stopConfetti();
@@ -337,7 +341,7 @@
   var params = new URLSearchParams(location.search);
   if (params.has('demo')) startDemo(params);
   // Test hook for feeding messages from the browser console (never active on a TV).
-  if (params.has('test') || params.has('demo')) window.ldReceiver = { handle: handle, state: S, onSend: function (fn) { send = fn; } };
+  if (params.has('test') || params.has('demo')) window.ldReceiver = { handle: handle, state: S, fit: fit, onSend: function (fn) { send = fn; } };
 
   // ---------------------------------------------------------------- AirPlay (iPhone second screen)
   // The app shows this page full-screen on the AirPlay TV and calls window.ldReceiver.handle(msg);
@@ -345,8 +349,21 @@
   var airplay = params.has('airplay') && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ld;
   if (airplay) {
     send = function (obj) { try { window.webkit.messageHandlers.ld.postMessage(obj); } catch (e) {} };
-    window.ldReceiver = { handle: handle, state: S };
-    send({ type: 'loaded', protocol: PROTOCOL });
+    window.ldReceiver = { handle: handle, state: S, fit: fit };
+    // Newer apps pass the TV's exact size (points); older ones don't, and the viewport is used.
+    if (window.__ldSize) fit(window.__ldSize.w, window.__ldSize.h);
+    send({ type: 'loaded', protocol: PROTOCOL, w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio });
+  }
+
+  /** Lays the page out for an exact screen size (px) and stops the web view from zooming it. */
+  function fit(w, h) {
+    w = Math.round(Number(w)); h = Math.round(Number(h));
+    if (!(w > 0 && h > 0)) return;
+    var meta = document.querySelector('meta[name=viewport]');
+    if (meta) meta.setAttribute('content', 'width=' + w + ', height=' + h + ', initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no');
+    var root = document.documentElement.style;
+    root.setProperty('--W', w + 'px');
+    root.setProperty('--H', h + 'px');
   }
 
   function startDemo(p) {
