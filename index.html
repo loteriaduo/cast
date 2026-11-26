@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lotería Duo</title>
+  <link rel="icon" href="img/brand/logo.svg">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Google Cast receiver SDK (only starts on a Cast device; ignored in a normal browser). -->
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+</head>
+<body>
+  <div id="app" class="screen-idle layout-card-board">
+    <div class="papel" aria-hidden="true"></div>
+
+    <!-- Waiting for a phone -->
+    <section class="idle">
+      <img class="rooster" src="img/brand/rooster.png" alt="">
+      <h1 class="wordmark">Lotería <span>Duo</span></h1>
+      <p class="hint" data-t="idleHint"></p>
+      <p class="hint sub" data-t="idleHint2"></p>
+    </section>
+
+    <!-- Connected, no card yet -->
+    <section class="ready">
+      <img class="rooster small" src="img/brand/rooster.png" alt="">
+      <p class="eyebrow" data-t="ready"></p>
+      <h1 class="deck-title" id="readyDeck"></h1>
+      <p class="caller-line" id="readyCaller"></p>
+      <p class="hint" data-t="waitingFirst"></p>
+    </section>
+
+    <!-- Game -->
+    <section class="game">
+      <div class="stage">
+        <div class="card-wrap">
+          <div class="card" id="card">
+            <img id="cardImg" alt="">
+            <div class="card-num" id="cardNum"></div>
+          </div>
+        </div>
+
+        <div class="info">
+          <div class="meta">
+            <span class="deck-name" id="deckName"></span>
+            <span class="dot">·</span>
+            <span class="caller-name" id="callerName"></span>
+          </div>
+
+          <div class="names">
+            <div class="name-row"><span class="name-num" id="nameNum"></span><div class="name-main" id="nameMain"></div></div>
+            <div class="name-sub" id="nameSub"></div>
+          </div>
+
+          <div class="progress">
+            <div class="progress-label"><span id="progressText"></span><span class="auto" id="autoText"></span></div>
+            <div class="bar"><div class="fill" id="progressFill"></div></div>
+          </div>
+
+          <div class="recent-wrap">
+            <div class="label" data-t="recent"></div>
+            <div class="recent" id="recent"></div>
+          </div>
+
+          <div class="board-wrap">
+            <div class="label" data-t="called"></div>
+            <div class="board" id="board"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="paused-pill" data-t="paused"></div>
+    </section>
+
+    <!-- End of the game -->
+    <section class="ended">
+      <img class="rooster small" src="img/brand/rooster.png" alt="">
+      <h1 class="big-title" data-t="ended"></h1>
+      <p class="hint" id="endedText"></p>
+    </section>
+
+    <!-- Winner -->
+    <section class="winner">
+      <div class="confetti" id="confetti" aria-hidden="true"></div>
+      <img class="rooster hop" src="img/brand/rooster.png" alt="">
+      <h1 class="loteria">¡Lotería!</h1>
+      <p class="winner-names" id="winnerNames"></p>
+    </section>
+
+    <div class="reconnecting" data-t="reconnecting"></div>
+  </div>
+
+  <script src="receiver.js"></script>
+</body>
+</html>
