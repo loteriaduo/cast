@@ -28,6 +28,9 @@
       auto: function (s) { return 'Automático · ' + s + ' s'; },
       caller: function (n) { return 'Canta: ' + n; },
       noName: '¡Tenemos ganador!',
+      joinTitle: '¡Únete desde tu teléfono!', step1: 'Abre la cámara', step2: 'Apunta a este código', step3: 'Toca el enlace. ¡Listo!',
+      joinAlt: function (h, c) { return 'o entra a ' + h + ' con el código ' + c; },
+      liveN: function (n) { return n === 1 ? '1 en vivo' : n + ' en vivo'; },
       calledHistory: 'Cartas cantadas', latest: 'Última', calledTab: 'Cantadas', restTab: 'Faltan',
       ofCalled: function (n) { return 'de ' + n + ' cantadas'; }, spotK: 'El anfitrión abrió esta carta',
       searching: function (q) { return 'Buscando "' + q + '"'; }, notYet: 'Todavía no sale',
@@ -51,6 +54,9 @@
       auto: function (s) { return 'Auto · ' + s + 's'; },
       caller: function (n) { return 'Caller: ' + n; },
       noName: 'We have a winner!',
+      joinTitle: 'Join from your phone!', step1: 'Open your camera', step2: 'Point it at this code', step3: 'Tap the link. Done!',
+      joinAlt: function (h, c) { return 'or go to ' + h + ' and enter ' + c; },
+      liveN: function (n) { return n + ' live'; },
       calledHistory: 'Called cards', latest: 'Latest', calledTab: 'Called', restTab: 'Not called yet',
       ofCalled: function (n) { return 'of ' + n + ' called'; }, spotK: 'The host opened this card',
       searching: function (q) { return 'Searching "' + q + '"'; }, notYet: 'Not called yet',
@@ -81,6 +87,7 @@
     total: 0,
     auto: null,            // { on, secs }
     winners: [],
+    join: null,            // live game: { code, url, count } (players join from their phones)
     tie: null,             // Tie Breaker round: { phase, picks: [{ id, who, top }], winner, next }
     connected: false,
   };
@@ -137,7 +144,7 @@
     if (S.status === 'tie' && S.tie && S.deck) return 'tie';
     if (S.status === 'winner') return 'winner';
     if (S.status === 'ended') return 'ended';
-    if (S.status === 'idle' || (S.status === 'ready' && S.current == null) || !S.deck) return S.deck ? 'ready' : 'idle';
+    if (S.status === 'idle' || (S.status === 'ready' && S.current == null) || !S.deck) return S.deck ? (S.join ? 'invite' : 'ready') : 'idle';
     return 'game';
   }
 
@@ -146,6 +153,7 @@
     var screen = screenFor();
     app.className = 'screen-' + screen + ' layout-' + S.layout + ' deck-' + (S.deck && S.deck.type === 'custom' ? 'custom' : 'official') +
       (S.status === 'paused' ? ' paused' : '') +
+      (S.join ? ' has-join' : '') +
       (screen === 'tie' && S.tie.phase === 'done' ? ' tie-done' : '') +
       (!S.connected && S.status !== 'idle' ? ' offline' : '');
 
@@ -164,8 +172,35 @@
     } else {
       stopConfetti('confetti');
     }
+    renderJoin(screen);
     if (screen === 'game') renderGame();
     if (screen === 'tie') renderTie(); else stopConfetti('tieConfetti');
+  }
+
+  // ---------------------------------------------------------------- live game QR
+  var qrFor = '';
+  /** QR (SVG, high error correction) with the Lotería Duo logo in the middle. */
+  function qrSvg(url) {
+    var q = qrcode(0, 'H'); q.addData(url); q.make();
+    var n = q.getModuleCount(), d = '';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
+    return '<svg viewBox="-1 -1 ' + (n + 2) + ' ' + (n + 2) + '" shape-rendering="crispEdges"><path d="' + d + '" fill="#0F0A1F"/></svg>' +
+      '<span class="qr-logo"><img src="img/brand/logo-face.png" alt=""></span>';
+  }
+  function renderJoin(screen) {
+    var j = S.join;
+    if (!j || !j.url) return;
+    if (qrFor !== j.url && window.qrcode) {
+      var svg = qrSvg(j.url);
+      $('inviteQr').innerHTML = svg; $('stripQr').innerHTML = svg;
+      qrFor = j.url;
+    }
+    var hostName = String(j.url).replace(/^https?:\/\//, '').split(/[/?]/)[0];
+    $('inviteAlt').textContent = t().joinAlt(hostName, j.code);
+    $('stripAlt').textContent = t().joinAlt(hostName, j.code);
+    $('inviteCount').textContent = t().liveN(j.count || 0);
+    $('stripCount').textContent = t().liveN(j.count || 0);
+    $('inviteDeck').textContent = (S.deck ? S.deck.name : '') + (S.caller && S.caller.name ? ' · ' + S.caller.name : '');
   }
 
   /** Older apps send 'card-board' or 'board': both are now the History view. */
@@ -481,6 +516,7 @@
     if (m.auto) S.auto = m.auto;
     if (m.winners) S.winners = m.winners;
     if ('look' in m) S.look = m.look || null;
+    if ('join' in m) S.join = m.join || null;
     if ('tie' in m) {
       S.tie = m.tie || null;
       // New round (nothing flipped yet) or Tie Breaker closed: forget which cards already flipped.
@@ -606,6 +642,11 @@
         status: function (s) { status = s; push(); },
         layout: function (l) { handle({ type: 'state', sid: 'demo', seq: seq++, layout: l }); },
         offline: function () { S.connected = false; render(); },
+        // demo.join(true | false): live game QR (players join from their phones)
+        join: function (on) {
+          handle({ type: 'state', sid: 'demo', seq: seq++, status: status, join: on ? { code: 'K7M-X4Q', url: 'https://juega.loteriaduo.com/?c=K7MX4Q', count: 12 } : null });
+        },
+        ready: function () { called = []; handle({ type: 'state', sid: 'demo2', seq: 0, status: 'ready', current: null, called: [], total: 54 }); },
         // demo.look('search' | 'card' | null, cardId, query)
         look: function (kind, id, q) {
           handle({ type: 'state', sid: 'demo', seq: seq++, status: status, look: kind ? { kind: kind, id: id, q: q || '' } : null });

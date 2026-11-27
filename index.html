@@ -30,6 +30,22 @@
       <p class="hint" data-t="waitingFirst"></p>
     </section>
 
+    <!-- Live game, before the first card: big QR so players join from their phones -->
+    <section class="invite">
+      <div class="qr-box big" id="inviteQr"></div>
+      <div class="invite-text">
+        <p class="deck-line" id="inviteDeck"></p>
+        <h1 class="invite-title" data-t="joinTitle"></h1>
+        <ol class="steps">
+          <li><i>1</i><span data-t="step1"></span></li>
+          <li><i>2</i><span data-t="step2"></span></li>
+          <li><i>3</i><span data-t="step3"></span></li>
+        </ol>
+        <p class="alt" id="inviteAlt"></p>
+        <div class="chips"><span class="live-chip"><i></i><span id="inviteCount"></span></span></div>
+      </div>
+    </section>
+
     <!-- Game -->
     <section class="game">
       <div class="stage">
@@ -95,6 +111,16 @@
         </div>
       </div>
 
+      <!-- Live game: QR strip under the card grids, so latecomers can join -->
+      <div class="joinstrip" id="joinStrip">
+        <div class="qr-box" id="stripQr"></div>
+        <div class="js-text">
+          <div class="js-t" data-t="joinTitle"></div>
+          <div class="js-s" id="stripAlt"></div>
+        </div>
+        <span class="live-chip"><i></i><span id="stripCount"></span></span>
+      </div>
+
       <!-- The host searched a card in History on the phone -->
       <div class="answer" id="answer">
         <img id="ansImg" alt="">
@@ -155,6 +181,7 @@
     <div class="reconnecting" data-t="reconnecting"></div>
   </div>
 
+  <script src="vendor/qrcode.js"></script>
   <script src="receiver.js"></script>
 </body>
 </html>

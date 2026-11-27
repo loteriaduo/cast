@@ -53,7 +53,7 @@ body { display: flex; align-items: center; justify-content: center; color: var(-
 }
 
 section { position: absolute; inset: 0; display: none; }
-.screen-idle .idle, .screen-ready .ready, .screen-ended .ended, .screen-winner .winner, .screen-tie .tie { display: flex; }
+.screen-idle .idle, .screen-ready .ready, .screen-ended .ended, .screen-winner .winner, .screen-tie .tie, .screen-invite .invite { display: flex; }
 .screen-game .game { display: block; }
 
 /* ---------- Idle / ready / ended (centered screens) ---------- */
@@ -273,3 +273,35 @@ section { position: absolute; inset: 0; display: none; }
 @media (prefers-reduced-motion: reduce) {
   .rooster, .rooster.hop, .card.flip, .confetti i, .ttile .frame, .tie-win-card, .answer, .spot-card { animation: none; }
 }
+
+/* ---------- Live game: players join from their phones (QR) ---------- */
+.qr-box { position: relative; background: #fff; border-radius: calc(var(--u) * 1.1); padding: calc(var(--u) * 0.8); flex: 0 0 auto; }
+.qr-box svg { display: block; width: 100%; height: 100%; }
+.qr-logo { position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; transform: translate(-50%, -50%); background: #fff; border-radius: 26%; padding: 4%; }
+.qr-logo img { width: 100%; height: 100%; border-radius: 20%; display: block; object-fit: cover; }
+
+.invite { align-items: center; justify-content: center; gap: calc(var(--u) * 5.5); padding: var(--top) var(--sx) var(--sy); }
+.qr-box.big { width: min(calc(var(--u) * 25), calc(var(--H) - var(--top) - var(--sy) - var(--u) * 2)); aspect-ratio: 1; padding: calc(var(--u) * 1.3); }
+.invite-text { max-width: calc(var(--u) * 44); }
+.deck-line { color: var(--teal); font-family: 'Lato'; font-weight: 700; font-size: calc(var(--u) * 1.6); margin-bottom: calc(var(--u) * 0.7); }
+.invite-title { font-family: 'OpenSans'; font-weight: 800; font-size: calc(var(--u) * 4.6); line-height: 1.05; }
+.steps { list-style: none; margin-top: calc(var(--u) * 1.8); display: grid; gap: calc(var(--u) * 1.1); }
+.steps li { display: flex; align-items: center; gap: calc(var(--u) * 1.1); font-size: calc(var(--u) * 2); }
+.steps i { width: calc(var(--u) * 3.2); height: calc(var(--u) * 3.2); border-radius: 50%; background: var(--teal); color: #062B2B; font-family: 'OpenSans'; font-weight: 800; font-style: normal; font-size: calc(var(--u) * 1.6); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.alt { margin-top: calc(var(--u) * 2); color: var(--muted); font-size: calc(var(--u) * 1.6); }
+.chips { margin-top: calc(var(--u) * 1.6); display: flex; gap: calc(var(--u) * 0.8); }
+.live-chip { display: inline-flex; align-items: center; gap: calc(var(--u) * 0.55); padding: calc(var(--u) * 0.4) calc(var(--u) * 1.1); border-radius: 999px; background: rgba(242, 104, 92, 0.16); color: #F2685C; font-family: 'OpenSans'; font-weight: 800; font-size: calc(var(--u) * 1.35); white-space: nowrap; }
+.live-chip i { width: calc(var(--u) * 0.6); height: calc(var(--u) * 0.6); border-radius: 50%; background: #F2685C; }
+
+.joinstrip { display: none; position: absolute; z-index: 4; left: calc(var(--sx) + var(--u) * 31); right: var(--sx); bottom: var(--sy); height: calc(var(--u) * 8.4); align-items: center; gap: calc(var(--u) * 1.4); background: rgba(22, 15, 46, 0.96); border: 1px solid rgba(249, 239, 231, 0.1); border-radius: calc(var(--u) * 1.4); padding: calc(var(--u) * 0.6) calc(var(--u) * 1.7) calc(var(--u) * 0.6) calc(var(--u) * 0.6); }
+.has-join .joinstrip { display: flex; }
+.joinstrip .qr-box { height: 100%; aspect-ratio: 1; padding: calc(var(--u) * 0.45); border-radius: calc(var(--u) * 0.8); }
+.js-text { min-width: 0; }
+.js-t { font-family: 'OpenSans'; font-weight: 800; font-size: calc(var(--u) * 1.9); }
+.js-s { color: var(--muted); font-size: calc(var(--u) * 1.35); margin-top: calc(var(--u) * 0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.joinstrip .live-chip { margin-left: auto; }
+.has-join .h-right { bottom: calc(var(--sy) + var(--u) * 9.6); }
+.has-join .answer { bottom: calc(var(--sy) + var(--u) * 9.6); }
+.layout-card .joinstrip { left: auto; width: calc(var(--u) * 52); }
+.layout-card.has-join .stage { bottom: calc(var(--sy) + var(--u) * 9.6); }
+.layout-card.has-join .card { height: min(calc(var(--u) * 49), calc(var(--H) - var(--top) - var(--sy) - var(--u) * 10)); }
