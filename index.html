@@ -58,18 +58,83 @@
             <div class="bar"><div class="fill" id="progressFill"></div></div>
           </div>
 
-          <div class="recent-wrap">
-            <div class="label" data-t="recent"></div>
-            <div class="recent" id="recent"></div>
-          </div>
+        </div>
+      </div>
 
-          <div class="board-wrap">
-            <div class="label" data-t="called"></div>
-            <div class="board" id="board"></div>
+      <!-- History view (default): the current card big on the left; called cards (newest first)
+           and the cards not called yet on the right, like the app's History page. -->
+      <div class="hist">
+        <div class="h-left">
+          <div class="meta">
+            <span class="deck-name" id="hDeck"></span>
+            <span class="dot">·</span>
+            <span class="caller-name" id="hCaller"></span>
+          </div>
+          <div class="h-cardbox">
+            <span class="h-kicker" data-t="latest"></span>
+            <div class="card h-card" id="hCard"><img id="hImg" alt=""><div class="card-num" id="hCardNum"></div></div>
+          </div>
+          <div class="name-row"><span class="name-num" id="hNum"></span><div class="h-name" id="hName"></div></div>
+          <div class="h-sub" id="hSub"></div>
+          <div class="h-foot">
+            <div class="h-count"><b id="hCount"></b> <span id="hOf"></span></div>
+            <span class="auto" id="hAuto"></span>
+            <span class="paused-pill" data-t="paused"></span>
+          </div>
+          <div class="bar"><div class="fill gold" id="hFill"></div></div>
+        </div>
+        <div class="h-right" id="hRight">
+          <div class="h-sec">
+            <div class="label" id="hCalledLabel"><span data-t="calledTab"></span> <span class="n" id="hCalledN"></span></div>
+            <div class="h-grid" id="hCalled"></div>
+          </div>
+          <div class="h-sec rest" id="hRestSec">
+            <div class="label muted" id="hRestLabel"><span data-t="restTab"></span> <span class="n" id="hRestN"></span></div>
+            <div class="h-grid" id="hRest"></div>
           </div>
         </div>
       </div>
 
+      <!-- The host searched a card in History on the phone -->
+      <div class="answer" id="answer">
+        <img id="ansImg" alt="">
+        <div class="ans-text">
+          <div class="ans-q" id="ansQ"></div>
+          <div class="ans-t"><span id="ansName"></span> <small id="ansNum"></small></div>
+          <div class="ans-r" id="ansR"></div>
+        </div>
+        <div class="ans-dot" id="ansDot"></div>
+      </div>
+
+      <!-- The host opened a card in History on the phone -->
+      <div class="spot" id="spot">
+        <div class="spot-card"><img id="spotImg" alt=""></div>
+        <div class="spot-text">
+          <div class="eyebrow" data-t="spotK"></div>
+          <div class="spot-t" id="spotName"></div>
+          <div class="spot-s" id="spotSub"></div>
+          <div class="spot-r" id="spotR"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tie Breaker (Desempate): each tied player flips a card, the highest card wins -->
+    <section class="tie">
+      <div class="tie-head">
+        <h1 class="tie-title" data-t="tieTitle"></h1>
+        <p class="tie-sub" data-t="tieSub"></p>
+        <p class="tie-status" id="tieStatus"></p>
+      </div>
+      <div class="tie-area fit-area"><div class="tie-grid" id="tieGrid"></div></div>
+      <div class="tie-win">
+        <div class="confetti" id="tieConfetti" aria-hidden="true"></div>
+        <div class="tie-win-card"><img id="tieWinImg" alt=""></div>
+        <div class="tie-win-text">
+          <p class="eyebrow" data-t="tieTitle"></p>
+          <h1 class="tie-win-title" id="tieWinTitle"></h1>
+          <p class="tie-win-sub" id="tieWinSub"></p>
+        </div>
+      </div>
     </section>
 
     <!-- End of the game -->
