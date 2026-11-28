@@ -28,9 +28,16 @@
       auto: function (s) { return 'Automático · ' + s + ' s'; },
       caller: function (n) { return 'Canta: ' + n; },
       noName: '¡Tenemos ganador!',
-      joinTitle: '¡Únete desde tu teléfono!', step1: 'Abre la cámara', step2: 'Apunta a este código', step3: 'Toca el enlace. ¡Listo!',
+      joinTitle: '¡Únete desde tu teléfono!', step1: 'Abre la cámara y apunta a este código', step2: 'Escribe tu nombre y elige tu personaje', step3: 'Toca Unirme. ¡Listo!',
+      says: function (n) { return '¡' + n + ' dice Lotería!'; }, sayMany: function (n) { return '¡' + n + ' dicen Lotería!'; }, and: 'y',
+      checking: 'Revisando su tabla…', checkingMany: 'Revisando sus tablas…',
+      falseT: 'Falsa alarma', falseS: function (n) { return 'A ' + n + ' le faltó una carta. ¡El juego sigue!'; },
+      voteK: function (n) { return n + ' tienen Lotería'; }, voteT: '¿Desempate o dividir el pozo?',
+      voteTie: 'Desempate', voteSplit: 'Dividir', voting: 'Votando…',
+      potLine: function (p) { return 'Pozo: ' + p.total + ' · Dividido: ' + p.each + ' cada uno'; },
+      turnOf: function (n, s) { return n + ' está eligiendo desde su teléfono · ' + s + ' s'; },
       joinAlt: function (h, c) { return 'o entra a ' + h + ' con el código ' + c; },
-      liveN: function (n) { return n === 1 ? '1 en vivo' : n + ' en vivo'; },
+      liveN: function (n) { return n === 1 ? '1 jugador en vivo' : n + ' jugadores en vivo'; },
       calledHistory: 'Cartas cantadas', latest: 'Última', calledTab: 'Cantadas', restTab: 'Faltan',
       ofCalled: function (n) { return 'de ' + n + ' cantadas'; }, spotK: 'El anfitrión abrió esta carta',
       searching: function (q) { return 'Buscando "' + q + '"'; }, notYet: 'Todavía no sale',
@@ -54,9 +61,16 @@
       auto: function (s) { return 'Auto · ' + s + 's'; },
       caller: function (n) { return 'Caller: ' + n; },
       noName: 'We have a winner!',
-      joinTitle: 'Join from your phone!', step1: 'Open your camera', step2: 'Point it at this code', step3: 'Tap the link. Done!',
+      joinTitle: 'Join from your phone!', step1: 'Open your camera and point it at this code', step2: 'Type your name and pick a character', step3: 'Tap Join. Done!',
+      says: function (n) { return n + ' says ¡Lotería!'; }, sayMany: function (n) { return n + ' say ¡Lotería!'; }, and: 'and',
+      checking: 'Checking their tabla…', checkingMany: 'Checking their tablas…',
+      falseT: 'False alarm', falseS: function (n) { return n + ' was missing a card. The game goes on!'; },
+      voteK: function (n) { return n + ' have Lotería'; }, voteT: 'Tie breaker or split the pot?',
+      voteTie: 'Tie breaker', voteSplit: 'Split', voting: 'Voting…',
+      potLine: function (p) { return 'Pot: ' + p.total + ' · Split: ' + p.each + ' each'; },
+      turnOf: function (n, s) { return n + ' is picking on their phone · ' + s + 's'; },
       joinAlt: function (h, c) { return 'or go to ' + h + ' and enter ' + c; },
-      liveN: function (n) { return n + ' live'; },
+      liveN: function (n) { return n === 1 ? '1 live player' : n + ' live players'; },
       calledHistory: 'Called cards', latest: 'Latest', calledTab: 'Called', restTab: 'Not called yet',
       ofCalled: function (n) { return 'of ' + n + ' called'; }, spotK: 'The host opened this card',
       searching: function (q) { return 'Searching "' + q + '"'; }, notYet: 'Not called yet',
@@ -88,9 +102,18 @@
     auto: null,            // { on, secs }
     winners: [],
     join: null,            // live game: { code, url, count } (players join from their phones)
-    tie: null,             // Tie Breaker round: { phase, picks: [{ id, who, top }], winner, next }
+    tie: null,             // Tie Breaker round: { phase, picks: [{ id, who, top, ch }], winner, next, turn }
+    live: null,            // live game: { roster, claims, vote, result } (players, ¡Lotería! calls, vote, false alarm)
     connected: false,
   };
+  var CH = window.LD_CHARS || { chars: {} };
+  /** A player's character on its round tile (first letter of the name when there is none). */
+  function avHtml(ch, name, cls) {
+    var c = ch && CH.chars[ch];
+    return '<span class="av' + (cls ? ' ' + cls : '') + '">' + (c ? c.svg : '<b>' + escapeAttr((String(name || '?').trim()[0] || '?').toUpperCase()) + '</b>') + '</span>';
+  }
+  function andList(names) { return names.length <= 1 ? names.join('') : names.slice(0, -1).join(', ') + ' ' + t().and + ' ' + names[names.length - 1]; }
+  function liveRoster() { return (S.live && S.live.roster) || []; }
   var images = {};   // card id -> image URL (blob: or https:)
   var parts = {};    // card id -> { got, parts, chunks[] }
   var lastShown = null;
@@ -168,11 +191,19 @@
       // "Winner"/"Ganador" means nobody was named: celebrate without a name.
       var named = (S.winners || []).filter(function (n) { return n && !/^(winner|ganador|manual winner)$/i.test(String(n).trim()); });
       $('winnerNames').textContent = named.length ? named.join(' · ') : t().noName;
+      var faces = '';
+      named.forEach(function (n) {
+        var p = liveRoster().filter(function (x) { return String(x.name).toLowerCase() === String(n).toLowerCase(); })[0];
+        if (p) faces += avHtml(p.ch, p.name);
+      });
+      if ($('winnerFaces').innerHTML !== faces) $('winnerFaces').innerHTML = faces;
+      $('winnerRooster').style.display = faces ? 'none' : '';
       startConfetti('confetti');
     } else {
       stopConfetti('confetti');
     }
     renderJoin(screen);
+    renderLive(screen);
     if (screen === 'game') renderGame();
     if (screen === 'tie') renderTie(); else stopConfetti('tieConfetti');
   }
@@ -200,7 +231,47 @@
     $('stripAlt').textContent = t().joinAlt(hostName, j.code);
     $('inviteCount').textContent = t().liveN(j.count || 0);
     $('stripCount').textContent = t().liveN(j.count || 0);
+    // Who joined: everyone on the invite screen (the newest pops in), the first few in the strip.
+    var r = liveRoster(), chips = '';
+    r.forEach(function (p, i) { chips += '<span class="ichip' + (i === r.length - 1 && r.length > 1 ? ' pop' : '') + '" data-k="' + escapeAttr(p.id) + '">' + avHtml(p.ch, p.name) + escapeAttr(p.name || '?') + '</span>'; });
+    if ($('inviteChips').getAttribute('data-h') !== chips) { $('inviteChips').innerHTML = chips; $('inviteChips').setAttribute('data-h', chips); }
+    var stack = r.slice(0, 6).map(function (p) { return avHtml(p.ch, p.name); }).join('') + (r.length > 6 ? '<span class="av more"><b>+' + (r.length - 6) + '</b></span>' : '');
+    if ($('stripStack').innerHTML !== stack) $('stripStack').innerHTML = stack;
     $('inviteDeck').textContent = (S.deck ? S.deck.name : '') + (S.caller && S.caller.name ? ' · ' + S.caller.name : '');
+  }
+
+  /** ¡Lotería! calls and false alarms (a big card over the game), and the tie-or-split vote. */
+  function renderLive(screen) {
+    var L = S.live || {}, claims = L.claims || [], r = L.result, vote = L.vote;
+    var html = '', cls = '';
+    var onGame = screen === 'game' || screen === 'invite';
+    if (onGame && vote) {
+      html = '';
+    } else if (onGame && claims.length) {
+      var names = claims.map(function (c) { return c.name || '?'; });
+      html = '<div class="lp-faces">' + claims.slice(0, 3).map(function (c) { return avHtml(c.ch, c.name); }).join('') + '</div>' +
+        '<div><div class="lp-t">' + escapeAttr(claims.length > 1 ? t().sayMany(andList(names)) : t().says(names[0])) + '</div><div class="lp-s">' + escapeAttr(claims.length > 1 ? t().checkingMany : t().checking) + '</div></div>';
+    } else if (onGame && r && r.kind === 'false') {
+      cls = ' soft';
+      html = '<div class="lp-faces">' + r.ids.slice(0, 3).map(function (id, i) {
+        var p = liveRoster().filter(function (x) { return x.id === id; })[0];
+        return avHtml(p ? p.ch : null, r.names[i]);
+      }).join('') + '</div><div><div class="lp-t">' + escapeAttr(t().falseT) + '</div><div class="lp-s">' + escapeAttr(t().falseS(andList(r.names.map(function (n) { return n || '?'; })))) + '</div></div>';
+    }
+    var pop = $('livePop');
+    if (pop.getAttribute('data-h') !== html + cls) { pop.innerHTML = html; pop.setAttribute('data-h', html + cls); pop.className = 'livepop' + cls + (html ? ' on' : ''); }
+
+    var vo = $('voteOv'), vh = '';
+    if (onGame && vote) {
+      var who = vote.ids.map(function (id, i) {
+        var v = vote.votes && vote.votes[id];
+        return '<div class="vp">' + avHtml(vote.chs[i], vote.names[i]) + '<b>' + escapeAttr(vote.names[i] || '?') + '</b>' +
+          '<span class="vv ' + (v || 'wait') + '">' + escapeAttr(v === 'split' ? t().voteSplit : v === 'tie' ? t().voteTie : t().voting) + '</span></div>';
+      }).join('<div class="vs">vs.</div>');
+      vh = '<div class="vk">' + escapeAttr(t().voteK(andList(vote.names))) + '</div><h1>' + escapeAttr(t().voteT) + '</h1><div class="vrow">' + who + '</div>' +
+        (vote.pot ? '<p class="vpot">' + escapeAttr(t().potLine(vote.pot)) + '</p>' : '');
+    }
+    if (vo.getAttribute('data-h') !== vh) { vo.innerHTML = vh; vo.setAttribute('data-h', vh); vo.className = 'voteov' + (vh ? ' on' : ''); }
   }
 
   /** Older apps send 'card-board' or 'board': both are now the History view. */
@@ -417,6 +488,11 @@
     var status = '';
     if (tie.phase === 'pick') status = (tie.next ? t().tieNext(tie.next) : t().tieEach) + (up ? '  ·  ' + t().tiePicked(up, picks.length) : '');
     else status = t().tieAll;
+    // Live game: the player picks on their own phone.
+    if (tie.phase === 'pick' && tie.turn) {
+      status = t().turnOf(tie.turn.name, Math.max(0, Math.ceil(((tie.turn.endsAt || 0) - Date.now()) / 1000)));
+      clearTimeout(tieTick); tieTick = setTimeout(function () { if (S.status === 'tie') renderTie(); }, 1000);
+    }
     $('tieStatus').textContent = status;
 
     var grid = $('tieGrid');
@@ -437,13 +513,13 @@
         '<div class="frame">' + (c ? '<img src="' + escapeAttr(imgFor(c, true)) + '" alt="">' : '<div class="back"><img src="img/brand/rooster.png" alt=""></div>') + '</div>' +
         (p.top ? '<span class="tag">' + escapeAttr(t().tieTop) + '</span>' : '') +
         (c ? '<span class="order">#' + escapeAttr(numFor(c)) + '</span>' : '') +
-        '<div class="tname">' + escapeAttr(p.who || '') + '</div></div>';
+        '<div class="tname">' + (p.ch ? avHtml(p.ch, p.who, 'sm') : '') + escapeAttr(p.who || '') + '</div></div>';
     }
     grid.innerHTML = html;
     renderTieWin(tie);
   }
 
-  var tieKey = '';
+  var tieKey = '', tieTick = null;
   var tieSeen = {};
   function renderTieWin(tie) {
     var top = null;
@@ -517,6 +593,7 @@
     if (m.winners) S.winners = m.winners;
     if ('look' in m) S.look = m.look || null;
     if ('join' in m) S.join = m.join || null;
+    if ('live' in m) S.live = m.live || null;
     if ('tie' in m) {
       S.tie = m.tie || null;
       // New round (nothing flipped yet) or Tie Breaker closed: forget which cards already flipped.
@@ -652,6 +729,17 @@
           handle({ type: 'state', sid: 'demo', seq: seq++, status: status, look: kind ? { kind: kind, id: id, q: q || '' } : null });
         },
         called: function () { return called.slice(); },
+        // demo.live('roster' | 'claim' | 'claim2' | 'vote' | 'false' | null, players = 8): live-game players and calls
+        live: function (kind, n) {
+          var who = [['Ana', 'tia'], ['Tío Beto', 'tio'], ['Lupe', 'quince'], ['Carlos', 'luchador'], ['Sofi', 'nina'], ['Abuela', 'abuela'], ['Pepe', 'nino'], ['Steve', 'gringo'], ['María', 'luna'], ['Diego', 'taquero'], ['Rosa', 'bailarina'], ['Memo', 'pelon']];
+          var roster = who.slice(0, n || 8).map(function (w, i) { return { id: 'p' + i, name: w[0], ch: w[1] }; });
+          var live = { roster: roster, claims: [], vote: null, result: null };
+          if (kind === 'claim') live.claims = [{ id: 'p0', name: 'Ana', ch: 'tia', at: Date.now() }];
+          if (kind === 'claim2') live.claims = [{ id: 'p0', name: 'Ana', ch: 'tia', at: Date.now() }, { id: 'p6', name: 'Pepe', ch: 'nino', at: Date.now() }];
+          if (kind === 'vote') live.vote = { ids: ['p0', 'p6'], names: ['Ana', 'Pepe'], chs: ['tia', 'nino'], votes: { p0: 'split' }, pot: { total: '$20', each: '$10' } };
+          if (kind === 'false') live.result = { kind: 'false', ids: ['p0'], names: ['Ana'], at: Date.now() };
+          handle({ type: 'state', sid: 'demo', seq: seq++, status: status, live: kind === null ? null : live, join: { code: 'K7M-X4Q', url: 'https://juega.loteriaduo.com/?c=K7MX4Q', count: roster.length } });
+        },
         // demo.tie('pick' | 'reveal' | 'done' | null, players = 4)
         tie: function (phase, n) {
           if (!phase) { handle({ type: 'state', sid: 'demo', seq: seq++, status: status, tie: null }); return; }

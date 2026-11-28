@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lotería Duo</title>
   <link rel="icon" href="img/brand/logo.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=7">
   <!-- Google Cast receiver SDK (only starts on a Cast device; ignored in a normal browser). -->
   <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
 </head>
@@ -43,6 +43,7 @@
         </ol>
         <p class="alt" id="inviteAlt"></p>
         <div class="chips"><span class="live-chip"><i></i><span id="inviteCount"></span></span></div>
+        <div class="ichips" id="inviteChips"></div>
       </div>
     </section>
 
@@ -118,6 +119,7 @@
           <div class="js-t" data-t="joinTitle"></div>
           <div class="js-s" id="stripAlt"></div>
         </div>
+        <div class="jstack" id="stripStack"></div>
         <span class="live-chip"><i></i><span id="stripCount"></span></span>
       </div>
 
@@ -173,15 +175,21 @@
     <!-- Winner -->
     <section class="winner">
       <div class="confetti" id="confetti" aria-hidden="true"></div>
-      <img class="rooster hop" src="img/brand/rooster.png" alt="">
+      <div class="wfaces" id="winnerFaces"></div>
+      <img class="rooster hop" id="winnerRooster" src="img/brand/rooster.png" alt="">
       <h1 class="loteria">¡Lotería!</h1>
       <p class="winner-names" id="winnerNames"></p>
     </section>
+
+    <!-- Live game: ¡Lotería! calls, false alarms and the "tie breaker or split" vote -->
+    <div class="livepop" id="livePop" aria-live="polite"></div>
+    <div class="voteov" id="voteOv"></div>
 
     <div class="reconnecting" data-t="reconnecting"></div>
   </div>
 
   <script src="vendor/qrcode.js"></script>
-  <script src="receiver.js"></script>
+  <script src="characters.js?v=7"></script>
+  <script src="receiver.js?v=7"></script>
 </body>
 </html>
